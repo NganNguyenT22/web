@@ -3,83 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Đơn Hàng - Mỹ Phẩm</title>
+    <title>ICD SOTRANS - Hệ Thống Quản Lý ERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { background-color: #f8f9fa; }
-        .sidebar { height: 100vh; background: #343a40; color: white; position: fixed; width: 240px; }
-        .sidebar a { color: white; text-decoration: none; padding: 15px; display: block; }
-        .sidebar a:hover { background: #495057; }
-        .main-content { margin-left: 240px; padding: 20px; }
-        .card-header { background: #fff; font-weight: bold; }
+        :root { --sidebar-width: 260px; --primary: #0d47a1; --dark: #1a233a; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7fe; overflow-x: hidden; margin: 0; }
+        
+        /* LOGIN SCREEN */
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%); }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        
+        /* APP LAYOUT */
+        #app-screen { display: none; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: var(--dark); color: #a2a3b7; position: fixed; z-index: 1000; }
+        .sidebar-brand { padding: 20px; text-align: center; color: white; font-weight: bold; font-size: 1.2rem; border-bottom: 1px solid #2d2d3f; }
+        .nav-link { color: #a2a3b7; cursor: pointer; padding: 12px 25px; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { color: white; background: #27314f; border-left: 4px solid var(--primary); }
+        .nav-link i { margin-right: 10px; }
+        
+        .main-content { margin-left: var(--sidebar-width); padding: 20px; }
+        .page { display: none; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .table thead th { background: #f8f9fa; text-transform: uppercase; font-size: 0.8rem; }
+        
+        #loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center;}
+        .role-section { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h4 class="text-center py-4">Hệ Thống Quản Lý</h4>
-        <a href="#">📦 Quản lý đơn hàng</a>
-        <a href="#">🏠 Quản lý kho</a>
-        <a href="#">👥 Khách hàng</a>
-        <a href="#">📊 Báo cáo doanh thu</a>
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="text-center">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2 fw-bold">Đang tải hệ thống...</p>
+        </div>
     </div>
 
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Danh sách đơn hàng</h2>
-            <button class="btn btn-primary" onclick="loadData()">🔄 Làm mới dữ liệu</button>
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="text-center mb-4">
+                <i class="bi bi-box-seam text-primary" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mt-2 text-dark">ICD SOTRANS</h4>
+                <p class="text-muted small">Hệ thống Quản lý ERP</p>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Tài khoản</label>
+                    <input type="text" id="username" class="form-control" placeholder="Nhập tài khoản" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Mật khẩu</label>
+                    <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">ĐĂNG NHẬP</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- HỆ THỐNG CHÍNH -->
+    <div id="app-screen">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-brand"><i class="bi bi-layers-fill text-primary me-2"></i> PORTAL ERP</div>
+            <div class="p-3 mb-2" style="background: rgba(255,255,255,0.05);">
+                <div class="fw-bold text-white" id="user-fullname">Đang tải...</div>
+                <div class="small text-warning fw-bold mt-1" id="user-role">...</div>
+            </div>
+            
+            <div id="menu-container">
+                <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard</a>
+                
+                <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
+                
+                <!-- Menu hiển thị linh hoạt theo chức năng -->
+                <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a>
+                <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a>
+                
+                <!-- Admin Tools -->
+                <div class="role-section view-admin">
+                    <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Quản trị</div>
+                    <a class="nav-link" onclick="switchPage('page-users')"><i class="bi bi-people"></i> Tài khoản NV</a>
+                </div>
+                
+                <a class="nav-link text-danger mt-4" onclick="location.reload()"><i class="bi bi-box-arrow-left"></i> Đăng xuất</a>
+            </div>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Mã Đơn</th>
-                            <th>Tên Khách Hàng</th>
-                            <th>Sản Phẩm</th>
-                            <th>Trạng Thái</th>
-                            <th>Tổng Tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table">
-                        <tr><td colspan="5" class="text-center">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0" id="page-title">Dashboard Tổng Quan</h4>
+                <div class="text-muted fw-bold" id="current-date"></div>
+            </div>
+            
+            <!-- TRANG 1: DASHBOARD -->
+            <div id="page-dashboard" class="page active">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card p-4 shadow-sm h-100 text-center">
+                            <h6 class="text-muted fw-bold">Tổng Cont Đang Tồn Bãi</h6>
+                            <h1 class="text-primary fw-bold" id="dash-nhap">0</h1>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card p-4 shadow-sm h-100 text-center">
+                            <h6 class="text-muted fw-bold">Tổng Cont Đã Cấp</h6>
+                            <h1 class="text-success fw-bold" id="dash-cap">0</h1>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 role-section view-admin">
+                        <div class="card p-4 shadow-sm h-100 text-center">
+                            <h6 class="text-muted fw-bold">Xuất Báo Cáo Hệ Thống</h6>
+                            <button class="btn btn-outline-primary mt-2" onclick="exportExcel('ContNhap')"><i class="bi bi-download"></i> Tải BC Tồn Bãi (CSV)</button>
+                            <button class="btn btn-outline-success mt-2" onclick="exportExcel('ContCap')"><i class="bi bi-download"></i> Tải BC Đã Cấp (CSV)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card p-3 shadow-sm">
+                            <h6 class="fw-bold text-center">Tỉ lệ Cont Nhập - Cấp</h6>
+                            <!-- Đã bọc div có height cố định để fix lỗi Chart.js -->
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="contChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANG 2: CONTAINER NHẬP BÃI -->
+            <div id="page-cont-nhap" class="page">
+                <div class="card shadow-sm p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold m-0 text-primary">BÁO CÁO NHẬP CONTAINER RỖNG</h6>
+                        <div>
+                            <!-- Nút Thêm Lệnh chỉ hiện cho Điều Độ hoặc Admin -->
+                            <button class="btn btn-primary btn-sm role-section view-dieudo" onclick="openModal('add', 'ContNhap')"><i class="bi bi-plus-lg"></i> Lập phiếu EIR Hạ Rỗng</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadData('ContNhap')"><i class="bi bi-arrow-clockwise"></i> Cập nhật</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-nowrap">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Stt</th><th>Số Container</th><th>Size</th><th>Line</th>
+                                    <th>Ngày nhập bãi</th><th>Bãi (Vị trí)</th><th>Ghi chú (M&R)</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-nhap"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANG 3: CONTAINER CẤP RỖNG -->
+            <div id="page-cont-cap" class="page">
+                <div class="card shadow-sm p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold m-0 text-success">BÁO CÁO CẤP CONTAINER RỖNG</h6>
+                        <div>
+                            <button class="btn btn-success btn-sm role-section view-dieudo" onclick="openModal('add', 'ContCap')"><i class="bi bi-plus-lg"></i> Lập phiếu EIR Cấp Rỗng</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadData('ContCap')"><i class="bi bi-arrow-clockwise"></i> Cập nhật</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-nowrap">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Stt</th><th>Số Container</th><th>Size</th><th>Line</th>
+                                    <th>Ngày Nhập bãi</th><th>Ngày thực hiện</th><th>Giao</th><th>Cảng ct</th><th>Ghi chú</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-cap"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANG 4: ADMIN - TÀI KHOẢN -->
+            <div id="page-users" class="page">
+                <div class="card shadow-sm p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold m-0 text-dark"><i class="bi bi-people me-2"></i>QUẢN LÝ TÀI KHOẢN NHÂN VIÊN</h6>
+                        <button class="btn btn-primary btn-sm" onclick="openUserModal('add')"><i class="bi bi-plus-lg"></i> Thêm Tài Khoản</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Mật khẩu</th>
+                                    <th>Họ và Tên</th>
+                                    <th>Vai trò</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-users"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL ĐỘNG CHO THÊM / SỬA CONTAINER -->
+    <div class="modal fade" id="dataModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white" id="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Cập nhật dữ liệu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm">
+                        <input type="hidden" id="m_type"> <!-- ContNhap hoặc ContCap -->
+                        <input type="hidden" id="m_rowIndex">
+                        <div class="row g-3" id="form-fields"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="saveData()">LƯU HỆ THỐNG</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Thay link Web App URL từ Apps Script của bạn vào đây
-        const API_URL = "URL_APPS_SCRIPT_CỦA_BẠN";
+    <!-- MODAL CHO QUẢN LÝ TÀI KHOẢN -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="userModalTitle">Cập nhật Tài khoản</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="u_rowIndex">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Tên đăng nhập (Username)</label>
+                            <input type="text" class="form-control" id="u_username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Mật khẩu</label>
+                            <input type="text" class="form-control" id="u_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Họ và Tên</label>
+                            <input type="text" class="form-control" id="u_hoten" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Vai trò (Role)</label>
+                            <select class="form-select" id="u_role">
+                                <option value="admin">Quản trị viên (Admin)</option>
+                                <option value="dieudo">Điều độ bãi</option>
+                                <option value="nangha">Lái cẩu / Nâng hạ</option>
+                                <option value="kythuat">Kỹ thuật viên (M&R)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="saveUser()">LƯU TÀI KHOẢN</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        async function loadData() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                let html = "";
-                data.forEach(row => {
-                    html += `
-                        <tr>
-                            <td>${row.MaDon}</td>
-                            <td>${row.TenKH}</td>
-                            <td>${row.SanPham}</td>
-                            <td><span class="badge bg-info">${row.TrangThai}</span></td>
-                            <td>${row.TongTien} VNĐ</td>
-                        </tr>
-                    `;
-                });
-                document.getElementById("data-table").innerHTML = html;
-            } catch (error) {
-                console.error("Lỗi:", error);
-                document.getElementById("data-table").innerHTML = "<tr><td colspan='5'>Không thể lấy dữ liệu!</td></tr>";
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ================= CẤU HÌNH API =================
+        const API_URL = "https://script.google.com/macros/s/AKfycbwP92TEkMUL9e1iKd2tIyNc9k7P5C2ObRHEIAcgkOJAAwGZGaUdxgaUsK1eAelV-6lWuA/exec"; // <-- THAY LINK CỦA BẠN VÀO ĐÂY
+        
+        let currentUser = null;
+        let dataNhap = [];
+        let dataCap = [];
+        let dataUsers = [];
+        let chartInstance = null;
+
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('vi-VN');
+        const showLoading = (s) => document.getElementById('loader').style.display = s ? 'flex' : 'none';
+
+        // ================= 1. ĐĂNG NHẬP (Lấy dữ liệu từ Sheet TaiKhoan) =================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            showLoading(true);
+
+            if(API_URL.includes("DÁN_LINK")) {
+                // Đăng nhập giả lập nếu chưa cấu hình API
+                if(user === "admin") currentUser = { name: "Quản trị viên", role: "admin" };
+                else if(user === "dieudo") currentUser = { name: "Nguyễn Văn Điều Độ", role: "dieudo" };
+                else if(user === "nangha") currentUser = { name: "Lái cẩu Nâng Hạ", role: "nangha" };
+                else if(user === "kythuat") currentUser = { name: "Kỹ sư Sửa chữa", role: "kythuat" };
+                else { alert("Vui lòng dán link API_URL để đăng nhập thật, hoặc dùng tài khoản giả lập: admin / dieudo"); showLoading(false); return; }
+            } else {
+                // Xác thực tài khoản thật qua API
+                try {
+                    const res = await fetch(API_URL + "?type=TaiKhoan");
+                    const users = await res.json();
+                    
+                    const found = users.find(u => u.Username === user && u.Password == pass);
+                    if(found) {
+                        currentUser = { name: found.HoTen, role: found.Role };
+                    } else {
+                        alert("Sai tài khoản hoặc mật khẩu!");
+                        showLoading(false);
+                        return;
+                    }
+                } catch (err) {
+                    alert("Lỗi kết nối API khi kiểm tra tài khoản!");
+                    showLoading(false);
+                    return;
+                }
             }
+
+            document.getElementById('user-fullname').innerText = currentUser.name;
+            document.getElementById('user-role').innerText = "Vai trò: " + currentUser.role.toUpperCase();
+
+            // Hiển thị Menu & Nút bấm theo phân quyền
+            document.querySelectorAll('.role-section').forEach(el => el.style.display = 'none');
+            
+            if(currentUser.role === 'admin') {
+                document.querySelectorAll('.role-section').forEach(el => el.style.display = 'block');
+            } else if(currentUser.role === 'dieudo') {
+                document.querySelectorAll('.view-nhap, .view-cap, .view-dieudo').forEach(el => el.style.display = 'block');
+            } else if(currentUser.role === 'nangha') {
+                document.querySelectorAll('.view-nhap').forEach(el => el.style.display = 'block');
+            } else if(currentUser.role === 'kythuat') {
+                document.querySelectorAll('.view-nhap').forEach(el => el.style.display = 'block');
+            }
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            
+            await initDashboard();
         }
 
-        // Tự động tải dữ liệu khi mở web
-        window.onload = loadData;
+        // ================= 2. ĐIỀU HƯỚNG TRANG =================
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            document.getElementById('page-title').innerText = event.currentTarget.innerText;
+            
+            if(pageId === 'page-cont-nhap') loadData('ContNhap');
+            if(pageId === 'page-cont-cap') loadData('ContCap');
+            if(pageId === 'page-users') loadUsers(); // Gọi load dữ liệu Users
+        }
+
+        // ================= 3. TẢI DỮ LIỆU TỪ GOOGLE SHEETS =================
+        async function initDashboard() {
+            if(API_URL.includes("DÁN_LINK")) return;
+            showLoading(true);
+            try {
+                const [resNhap, resCap] = await Promise.all([
+                    fetch(API_URL + "?type=ContNhap"),
+                    fetch(API_URL + "?type=ContCap")
+                ]);
+                dataNhap = await resNhap.json();
+                dataCap = await resCap.json();
+                drawChart();
+            } catch (e) { console.log(e); }
+            showLoading(false);
+        }
+
+        async function loadData(type) {
+            showLoading(true);
+            try {
+                const res = await fetch(API_URL + "?type=" + type);
+                const data = await res.json();
+                if(type === 'ContNhap') {
+                    dataNhap = data;
+                    renderTableNhap();
+                } else {
+                    dataCap = data;
+                    renderTableCap();
+                }
+            } catch (e) { console.error(e); }
+            showLoading(false);
+        }
+
+        // ================= 4. HIỂN THỊ BẢNG CONTAINER =================
+        function renderTableNhap() {
+            let html = "";
+            dataNhap.forEach(row => {
+                const d = new Date(row["Ngày nhập bãi"]);
+                const dateStr = !isNaN(d) ? d.toLocaleString('vi-VN') : row["Ngày nhập bãi"];
+                html += `<tr>
+                    <td>${row["Stt"] || ''}</td>
+                    <td class="fw-bold text-primary">${row["Số Container"] || ''}</td>
+                    <td>${row["Size"] || ''}</td>
+                    <td><span class="badge bg-secondary">${row["Line"] || ''}</span></td>
+                    <td class="small">${dateStr}</td>
+                    <td class="fw-bold text-danger">${row["Bãi"] || ''}</td>
+                    <td class="small text-muted" style="max-width:200px; overflow:hidden; text-overflow:ellipsis;">${row["Ghi chú"] || ''}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openModal('edit', 'ContNhap', ${row.rowIndex})"><i class="bi bi-pencil"></i></button>
+                        ${currentUser.role === 'admin' ? `<button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRow('ContNhap', ${row.rowIndex})"><i class="bi bi-trash"></i></button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('tbody-nhap').innerHTML = html || '<tr><td colspan="8" class="text-center">Trống</td></tr>';
+        }
+
+        function renderTableCap() {
+            let html = "";
+            dataCap.forEach(row => {
+                const d = new Date(row["Ngày thực hiện"]);
+                const dateStr = !isNaN(d) ? d.toLocaleString('vi-VN') : row["Ngày thực hiện"];
+                html += `<tr>
+                    <td>${row["Stt"] || ''}</td>
+                    <td class="fw-bold text-success">${row["Số Container"] || ''}</td>
+                    <td>${row["Size"] || ''}</td>
+                    <td><span class="badge bg-secondary">${row["Line"] || ''}</span></td>
+                    <td class="small">${row["Ngày Nhập bãi"] || ''}</td>
+                    <td class="small fw-bold">${dateStr}</td>
+                    <td>${row["Giao"] || ''}</td>
+                    <td>${row["Cảng ct"] || ''}</td>
+                    <td class="small text-muted" style="max-width:150px; overflow:hidden; text-overflow:ellipsis;">${row["Ghi chú"] || ''}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openModal('edit', 'ContCap', ${row.rowIndex})"><i class="bi bi-pencil"></i></button>
+                        ${currentUser.role === 'admin' ? `<button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRow('ContCap', ${row.rowIndex})"><i class="bi bi-trash"></i></button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('tbody-cap').innerHTML = html || '<tr><td colspan="10" class="text-center">Trống</td></tr>';
+        }
+
+        // ================= 5. FORM NHẬP LIỆU CONTAINER ĐỘNG =================
+        const dataModal = new bootstrap.Modal(document.getElementById('dataModal'));
+
+        function openModal(mode, type, rowIndex = null) {
+            document.getElementById('m_type').value = type;
+            document.getElementById('m_rowIndex').value = rowIndex || "";
+            
+            const header = document.getElementById('modal-header');
+            header.className = type === 'ContNhap' ? "modal-header bg-primary text-white" : "modal-header bg-success text-white";
+            document.getElementById('modalTitle').innerText = mode === 'add' ? `Tạo Lệnh (EIR) - ${type}` : `Cập nhật thông tin - ${type}`;
+
+            let formHtml = "";
+            let dataRow = null;
+            if(mode === 'edit') {
+                const sourceData = type === 'ContNhap' ? dataNhap : dataCap;
+                dataRow = sourceData.find(r => r.rowIndex === rowIndex);
+            }
+
+            const nhapFields = ['Stt', 'Số Container', 'Size', 'Line', 'Ngày nhập bãi', 'Ghi chú', 'Bãi'];
+            const capFields = ['Stt', 'Số Container', 'Size', 'Line', 'Ngày Nhập bãi', 'Ngày thực hiện', 'Giao', 'Cảng ct', 'Ghi chú'];
+            const fields = type === 'ContNhap' ? nhapFields : capFields;
+
+            fields.forEach((field, index) => {
+                const val = dataRow ? (dataRow[field] || '') : '';
+                
+                let readonly = "";
+                if(mode === 'edit' && currentUser.role !== 'admin') {
+                    if(currentUser.role === 'nangha' && field !== 'Bãi') readonly = "readonly";
+                    if(currentUser.role === 'kythuat' && field !== 'Ghi chú') readonly = "readonly";
+                }
+
+                formHtml += `
+                <div class="${field === 'Ghi chú' ? 'col-12' : 'col-md-6'} mb-2">
+                    <label class="form-label small fw-bold">${field}</label>
+                    <input type="text" class="form-control" id="f_${index}" value="${val}" ${readonly}>
+                </div>`;
+            });
+
+            document.getElementById('form-fields').innerHTML = formHtml;
+            dataModal.show();
+        }
+
+        async function saveData() {
+            const type = document.getElementById('m_type').value;
+            const rowIndex = document.getElementById('m_rowIndex').value;
+            
+            const fieldsCount = type === 'ContNhap' ? 7 : 9;
+            const rowData = [];
+            for(let i=0; i<fieldsCount; i++) {
+                rowData.push(document.getElementById(`f_${i}`).value);
+            }
+
+            const payload = {
+                sheetType: type,
+                action: rowIndex ? "update" : "add",
+                rowIndex: rowIndex ? parseInt(rowIndex) : null,
+                data: rowData
+            };
+
+            showLoading(true);
+            try {
+                await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+                dataModal.hide();
+                setTimeout(() => { 
+                    alert("Đã lưu thành công vào Hệ thống!"); 
+                    loadData(type); 
+                    if(type==='ContNhap') initDashboard();
+                }, 1500);
+            } catch(e) { alert("Lỗi khi lưu!"); showLoading(false); }
+        }
+
+        async function deleteRow(type, rowIndex) {
+            if(!confirm("Cảnh báo: Bạn có chắc chắn muốn XÓA VĨNH VIỄN dòng này?")) return;
+            showLoading(true);
+            try {
+                await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetType: type, action: "delete", rowIndex: rowIndex }) });
+                setTimeout(() => { loadData(type); initDashboard(); }, 1500);
+            } catch(e) { showLoading(false); }
+        }
+
+        // ================= 6. QUẢN LÝ TÀI KHOẢN (ADMIN) =================
+        const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+
+        async function loadUsers() {
+            showLoading(true);
+            try {
+                const res = await fetch(API_URL + "?type=TaiKhoan");
+                dataUsers = await res.json();
+                renderTableUsers();
+            } catch (e) { console.error(e); }
+            showLoading(false);
+        }
+
+        function renderTableUsers() {
+            let html = "";
+            dataUsers.forEach(row => {
+                let badgeClass = "bg-secondary";
+                let roleName = row["Role"];
+                if(row["Role"] === "admin") { badgeClass = "bg-danger"; roleName = "Quản trị viên"; }
+                if(row["Role"] === "dieudo") { badgeClass = "bg-primary"; roleName = "Điều độ bãi"; }
+                if(row["Role"] === "nangha") { badgeClass = "bg-success"; roleName = "Nâng hạ"; }
+                if(row["Role"] === "kythuat") { badgeClass = "bg-warning text-dark"; roleName = "Kỹ thuật"; }
+
+                html += `<tr>
+                    <td class="fw-bold">${row["Username"] || ''}</td>
+                    <td>***</td>
+                    <td>${row["HoTen"] || ''}</td>
+                    <td><span class="badge ${badgeClass}">${roleName}</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openUserModal('edit', ${row.rowIndex})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteUser(${row.rowIndex})"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('tbody-users').innerHTML = html || '<tr><td colspan="5" class="text-center">Trống</td></tr>';
+        }
+
+        function openUserModal(mode, rowIndex = null) {
+            document.getElementById('userForm').reset();
+            document.getElementById('u_rowIndex').value = rowIndex || "";
+            document.getElementById('userModalTitle').innerText = mode === 'add' ? 'Thêm Tài Khoản' : 'Sửa Tài Khoản';
+
+            if(mode === 'edit') {
+                const user = dataUsers.find(r => r.rowIndex === rowIndex);
+                if(user) {
+                    document.getElementById('u_username').value = user["Username"] || "";
+                    document.getElementById('u_password').value = user["Password"] || "";
+                    document.getElementById('u_hoten').value = user["HoTen"] || "";
+                    document.getElementById('u_role').value = user["Role"] || "dieudo";
+                }
+            }
+            userModal.show();
+        }
+
+        async function saveUser() {
+            const rowIndex = document.getElementById('u_rowIndex').value;
+            // Cấu trúc Mảng phải đúng với 4 cột trên Sheet TaiKhoan
+            const rowData = [
+                document.getElementById('u_username').value,
+                document.getElementById('u_password').value,
+                document.getElementById('u_hoten').value,
+                document.getElementById('u_role').value
+            ];
+
+            const payload = {
+                sheetType: "TaiKhoan",
+                action: rowIndex ? "update" : "add",
+                rowIndex: rowIndex ? parseInt(rowIndex) : null,
+                data: rowData
+            };
+
+            showLoading(true);
+            try {
+                await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+                userModal.hide();
+                setTimeout(() => { alert("Lưu tài khoản thành công!"); loadUsers(); }, 1500);
+            } catch(e) { alert("Lỗi khi lưu tài khoản!"); showLoading(false); }
+        }
+
+        async function deleteUser(rowIndex) {
+            if(!confirm("Cảnh báo: Bạn có chắc chắn muốn xóa tài khoản này?")) return;
+            showLoading(true);
+            try {
+                await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetType: "TaiKhoan", action: "delete", rowIndex: rowIndex }) });
+                setTimeout(() => { loadUsers(); }, 1500);
+            } catch(e) { showLoading(false); }
+        }
+
+        // ================= 7. VẼ BIỂU ĐỒ & XUẤT EXCEL =================
+        function drawChart() {
+            const lenNhap = dataNhap ? dataNhap.length : 0;
+            const lenCap = dataCap ? dataCap.length : 0;
+            
+            document.getElementById('dash-nhap').innerText = lenNhap;
+            document.getElementById('dash-cap').innerText = lenCap;
+
+            const ctx = document.getElementById('contChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Tồn bãi (Chưa cấp)', 'Đã Cấp (Xuất bãi)'],
+                    datasets: [{
+                        data: [lenNhap, lenCap],
+                        backgroundColor: ['#0d47a1', '#28a745']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function exportExcel(type) {
+            const data = type === 'ContNhap' ? dataNhap : dataCap;
+            if(!data || !data.length) return alert("Không có dữ liệu để xuất");
+            
+            let csv = "";
+            const keys = Object.keys(data[0]).filter(k => k !== 'rowIndex');
+            csv += keys.join(",") + "\n";
+            
+            data.forEach(row => {
+                const rowArray = keys.map(k => `"${row[k] || ''}"`);
+                csv += rowArray.join(",") + "\n";
+            });
+
+            const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `BaoCao_${type}_${new Date().getTime()}.csv`;
+            a.click();
+        }
     </script>
 </body>
 </html>
