@@ -190,7 +190,66 @@
                     </div>
                 </div>
             </div>
+            <!-- page booking-->
+           <div id="page-booking" class="page">
 
+    <div class="card shadow-sm p-3">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h6 class="fw-bold text-warning m-0">
+                QUẢN LÝ LỆNH CONTAINER
+            </h6>
+
+            <div>
+
+                <button class="btn btn-warning btn-sm"
+                onclick="openBookingModal('add')">
+
+                    <i class="bi bi-plus-lg"></i>
+                    Tạo lệnh
+
+                </button>
+
+                <button class="btn btn-outline-primary btn-sm"
+                onclick="openSearchModal()">
+
+                    <i class="bi bi-search"></i>
+                    Tìm booking
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>STT</th>
+                        <th>Hãng tàu</th>
+                        <th>Số booking</th>
+                        <th>Yêu cầu</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th>Thao tác</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="tbody-booking"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
             <!-- TRANG 4: ADMIN - TÀI KHOẢN -->
             <div id="page-users" class="page">
                 <div class="card shadow-sm p-3">
@@ -240,7 +299,58 @@
             </div>
         </div>
     </div>
+    <!-- Modal_tìm kiếm-->
+     <div class="modal fade" id="searchModal" tabindex="-1">
 
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title">
+                    Tìm kiếm Booking
+                </h5>
+
+                <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <label class="form-label fw-bold">
+                    Nhập số booking
+                </label>
+
+                <input type="text"
+                class="form-control"
+                id="searchBookingInput"
+                placeholder="VD: BK001">
+
+                <div id="searchResult"
+                class="mt-3"></div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn btn-primary"
+                onclick="timBooking()">
+
+                    <i class="bi bi-search"></i>
+                    Tìm kiếm
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
     <!-- MODAL CHO QUẢN LÝ TÀI KHOẢN -->
     <div class="modal fade" id="userModal" tabindex="-1">
         <div class="modal-dialog">
@@ -342,7 +452,7 @@
             if(currentUser.role === 'admin') {
                 document.querySelectorAll('.role-section').forEach(el => el.style.display = 'block');
             } else if(currentUser.role === 'dieudo') {
-                document.querySelectorAll('.view-nhap, .view-cap, .view-dieudo').forEach(el => el.style.display = 'block');
+                document.querySelectorAll('.view-nhap, .view-cap, .view-dieudo, .view-booking').forEach(el => el.style.display = 'block');
             } else if(currentUser.role === 'nangha') {
                 document.querySelectorAll('.view-nhap').forEach(el => el.style.display = 'block');
             } else if(currentUser.role === 'kythuat') {
@@ -399,7 +509,248 @@
             } catch (e) { console.error(e); }
             showLoading(false);
         }
+        //==================Booking==============
+        const searchModal =
+new bootstrap.Modal(
+    document.getElementById('searchModal')
+);
 
+function openSearchModal() {
+
+    document.getElementById('searchBookingInput').value = "";
+
+    document.getElementById('searchResult').innerHTML = "";
+
+    searchModal.show();
+}
+        function renderBooking() {
+
+    let html = "";
+
+    dataBooking.forEach(row => {
+
+        const badge =
+        row["YeuCau"] === "Hạ rỗng"
+        ? "bg-primary"
+        : "bg-success";
+
+        html += `
+
+        <tr>
+
+            <td>${row["STT"] || ''}</td>
+
+            <td>
+                <span class="fw-bold text-primary">
+                    ${row["HangTau"] || ''}
+                </span>
+            </td>
+
+            <td>
+                <span class="badge bg-dark">
+                    ${row["SoBooking"] || ''}
+                </span>
+            </td>
+
+            <td>
+                <span class="badge ${badge}">
+                    ${row["YeuCau"] || ''}
+                </span>
+            </td>
+
+            <td>${row["ThoiGianBatDau"] || ''}</td>
+
+            <td>${row["ThoiGianKetThuc"] || ''}</td>
+
+            <td>
+
+                <button class="btn btn-success btn-sm"
+                onclick="xacNhanLenh(${row.rowIndex})">
+
+                    Chấp nhận
+
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+    });
+
+    document.getElementById('tbody-booking').innerHTML =
+    html || `
+    <tr>
+        <td colspan="7" class="text-center">
+            Không có lệnh
+        </td>
+    </tr>
+    `;
+}   
+    function timBooking() {
+
+    const code =
+    document.getElementById('searchBookingInput')
+    .value
+    .trim();
+
+    const found =
+    dataBooking.find(
+        b => b.SoBooking === code
+    );
+
+    if(!found) {
+
+        document.getElementById('searchResult')
+        .innerHTML = `
+
+        <div class="alert alert-danger">
+
+            Không tìm thấy booking
+
+        </div>
+        `;
+
+        return;
+    }
+
+    document.getElementById('searchResult')
+    .innerHTML = `
+
+    <div class="card p-3">
+
+        <h6 class="fw-bold text-success">
+
+            Đã tìm thấy booking
+
+        </h6>
+
+        <p><b>Hãng tàu:</b> ${found.HangTau}</p>
+
+        <p><b>Yêu cầu:</b> ${found.YeuCau}</p>
+
+        <p><b>Bắt đầu:</b> ${found.ThoiGianBatDau}</p>
+
+        <p><b>Kết thúc:</b> ${found.ThoiGianKetThuc}</p>
+
+        <button class="btn btn-success w-100"
+        onclick="xacNhanLenh(${found.rowIndex})">
+
+            Chấp nhận thực hiện
+
+        </button>
+
+    </div>
+    `;
+}        
+    function renderBooking() {
+
+    let html = "";
+
+    dataBooking.forEach(row => {
+
+        const badge =
+        row["YeuCau"] === "Hạ rỗng"
+        ? "bg-primary"
+        : "bg-success";
+
+        html += `
+
+        <tr>
+
+            <td>${row["STT"] || ''}</td>
+
+            <td>
+                <span class="fw-bold text-primary">
+                    ${row["HangTau"] || ''}
+                </span>
+            </td>
+
+            <td>
+                <span class="badge bg-dark">
+                    ${row["SoBooking"] || ''}
+                </span>
+            </td>
+
+            <td>
+                <span class="badge ${badge}">
+                    ${row["YeuCau"] || ''}
+                </span>
+            </td>
+
+            <td>${row["ThoiGianBatDau"] || ''}</td>
+
+            <td>${row["ThoiGianKetThuc"] || ''}</td>
+
+            <td>
+
+                <button class="btn btn-success btn-sm"
+                onclick="xacNhanLenh(${row.rowIndex})">
+
+                    Chấp nhận
+
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+    });
+
+    document.getElementById('tbody-booking').innerHTML =
+    html || `
+    <tr>
+        <td colspan="7" class="text-center">
+            Không có lệnh
+        </td>
+    </tr>
+    `;
+    async function xacNhanLenh(rowIndex) {
+
+    if(!confirm("Xác nhận hoàn thành lệnh này?"))
+        return;
+
+    showLoading(true);
+
+    try {
+
+        await fetch(API_URL, {
+
+            method: "POST",
+
+            mode: "no-cors",
+
+            body: JSON.stringify({
+
+                sheetType: "Booking",
+
+                action: "delete",
+
+                rowIndex: rowIndex
+
+            })
+        });
+
+        setTimeout(() => {
+
+            loadBooking();
+
+            searchModal.hide();
+
+            alert("Đã xác nhận lệnh!");
+
+        }, 1000);
+
+    } catch(e) {
+
+        console.error(e);
+
+    }
+
+    showLoading(false);
+}
+}
         // ================= 4. HIỂN THỊ BẢNG CONTAINER =================
         function renderTableNhap() {
             let html = "";
