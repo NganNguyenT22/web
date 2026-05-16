@@ -78,15 +78,15 @@
                 <div class="small text-warning fw-bold mt-1" id="user-role">...</div>
             </div>
             
-            <div id="menu-container">
-                <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard</a>
-                
-                <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
-                
-                <!-- Menu hiển thị linh hoạt theo chức năng -->
-                <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a>
-                <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a>
-                
+<!--booking -->
+                            <div id="menu-container">
+    <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard Tổng Quan</a>
+    <a class="nav-link" onclick="switchPage('page-ql-lenh')"><i class="bi bi-file-earmark-text"></i> QL. Lệnh Booking</a>
+    
+    <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
+    <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a> [cite: 26, 27]
+    <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a> [cite: 27, 28]
+    
                 <!-- Admin Tools -->
                 <div class="role-section view-admin">
                     <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Quản trị</div>
@@ -251,15 +251,7 @@
 
         </div>
     </div>
-<!--booking -->
-                            <div id="menu-container">
-    <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard Tổng Quan</a>
-    <a class="nav-link" onclick="switchPage('page-ql-lenh')"><i class="bi bi-file-earmark-text"></i> QL. Lệnh Booking</a>
-    
-    <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
-    <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a> [cite: 26, 27]
-    <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a> [cite: 27, 28]
-    
+
     <!-- MODAL ĐỘNG CHO THÊM / SỬA CONTAINER -->
     <div class="modal fade" id="dataModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
