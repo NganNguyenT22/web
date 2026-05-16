@@ -456,7 +456,7 @@ async function acceptBookingOrder(requestType, bookingNo, rowIndex) {
             
             showLoading(true);
 
-            if(API_URL.includes("DÁN_LINK")) {
+            if(true) {
                 // Đăng nhập giả lập nếu chưa cấu hình API
                 if(user === "admin") currentUser = { name: "Quản trị viên", role: "admin" };
                 else if(user === "dieudo") currentUser = { name: "Nguyễn Văn Điều Độ", role: "dieudo" };
