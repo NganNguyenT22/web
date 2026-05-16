@@ -103,41 +103,7 @@
                 <h4 class="fw-bold m-0" id="page-title">Dashboard Tổng Quan</h4>
                 <div class="text-muted fw-bold" id="current-date"></div>
             </div>
-            <div id="page-ql-lenh" class="page">
-    <div class="card shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h6 class="fw-bold m-0 text-primary"><i class="bi bi-card-list me-2"></i>DANH SÁCH LỆNH CHỜ DUYỆT BÃI</h6>
-            
-            <div class="input-group" style="max-width: 350px;">
-                <input type="text" id="search-booking-input" class="form-control form-control-sm" placeholder="Nhập số Booking...">
-                <button class="btn btn-primary btn-sm" type="button" onclick="searchBooking()">
-                    <i class="bi bi-search"></i> Tìm kiếm
-                </button>
-            </div>
-        </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-nowrap">
-                <thead class="table-light">
-                    <tr>
-                        <th>Stt</th>
-                        <th>Hãng tàu</th>
-                        <th>Số Booking</th>
-                        <th>Yêu cầu</th>
-                        <th>Thời gian bắt đầu</th>
-                        <th>Thời gian kết thúc</th>
-                        <th class="text-center">Thao tác xử lý</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-lenh">
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Vui lòng nhập số Booking để thực hiện tìm kiếm lệnh.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
             <!-- TRANG 1: DASHBOARD -->
             <div id="page-dashboard" class="page active">
                 <div class="row">
@@ -173,7 +139,42 @@
                     </div>
                 </div>
             </div>
+            <!--ql-lenh-->
+                        <div id="page-ql-lenh" class="page">
+    <div class="card shadow-sm p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="fw-bold m-0 text-primary"><i class="bi bi-card-list me-2"></i>DANH SÁCH LỆNH CHỜ DUYỆT BÃI</h6>
+            
+            <div class="input-group" style="max-width: 350px;">
+                <input type="text" id="search-booking-input" class="form-control form-control-sm" placeholder="Nhập số Booking...">
+                <button class="btn btn-primary btn-sm" type="button" onclick="searchBooking()">
+                    <i class="bi bi-search"></i> Tìm kiếm
+                </button>
+            </div>
+        </div>
 
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-nowrap">
+                <thead class="table-light">
+                    <tr>
+                        <th>Stt</th>
+                        <th>Hãng tàu</th>
+                        <th>Số Booking</th>
+                        <th>Yêu cầu</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th class="text-center">Thao tác xử lý</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-lenh">
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Vui lòng nhập số Booking để thực hiện tìm kiếm lệnh.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
             <!-- TRANG 2: CONTAINER NHẬP BÃI -->
             <div id="page-cont-nhap" class="page">
                 <div class="card shadow-sm p-3">
