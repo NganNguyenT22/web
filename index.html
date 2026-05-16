@@ -78,15 +78,15 @@
                 <div class="small text-warning fw-bold mt-1" id="user-role">...</div>
             </div>
             
-<!--booking -->
-                            <div id="menu-container">
-    <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard Tổng Quan</a>
-    <a class="nav-link" onclick="switchPage('page-ql-lenh')"><i class="bi bi-file-earmark-text"></i> QL. Lệnh Booking</a>
-    
-    <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
-    <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a> [cite: 26, 27]
-    <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a> [cite: 27, 28]
-    
+            <div id="menu-container">
+                <a class="nav-link active" onclick="switchPage('page-dashboard')"><i class="bi bi-pie-chart"></i> Dashboard</a>
+                
+                <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Nghiệp vụ</div>
+                
+                <!-- Menu hiển thị linh hoạt theo chức năng -->
+                <a class="nav-link role-section view-nhap" onclick="switchPage('page-cont-nhap')"><i class="bi bi-box-arrow-in-right"></i> QL. Nhập Bãi / Vị trí</a>
+                <a class="nav-link role-section view-cap" onclick="switchPage('page-cont-cap')"><i class="bi bi-box-arrow-up-right"></i> QL. Cấp Rỗng</a>
+                
                 <!-- Admin Tools -->
                 <div class="role-section view-admin">
                     <div class="px-3 mt-3 mb-1 small fw-bold text-uppercase" style="color: #6c7293;">Quản trị</div>
@@ -103,7 +103,7 @@
                 <h4 class="fw-bold m-0" id="page-title">Dashboard Tổng Quan</h4>
                 <div class="text-muted fw-bold" id="current-date"></div>
             </div>
-
+            
             <!-- TRANG 1: DASHBOARD -->
             <div id="page-dashboard" class="page active">
                 <div class="row">
@@ -139,42 +139,7 @@
                     </div>
                 </div>
             </div>
-            <!--ql-lenh-->
-                        <div id="page-ql-lenh" class="page">
-    <div class="card shadow-sm p-3">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h6 class="fw-bold m-0 text-primary"><i class="bi bi-card-list me-2"></i>DANH SÁCH LỆNH CHỜ DUYỆT BÃI</h6>
-            
-            <div class="input-group" style="max-width: 350px;">
-                <input type="text" id="search-booking-input" class="form-control form-control-sm" placeholder="Nhập số Booking...">
-                <button class="btn btn-primary btn-sm" type="button" onclick="searchBooking()">
-                    <i class="bi bi-search"></i> Tìm kiếm
-                </button>
-            </div>
-        </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-nowrap">
-                <thead class="table-light">
-                    <tr>
-                        <th>Stt</th>
-                        <th>Hãng tàu</th>
-                        <th>Số Booking</th>
-                        <th>Yêu cầu</th>
-                        <th>Thời gian bắt đầu</th>
-                        <th>Thời gian kết thúc</th>
-                        <th class="text-center">Thao tác xử lý</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-lenh">
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Vui lòng nhập số Booking để thực hiện tìm kiếm lệnh.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
             <!-- TRANG 2: CONTAINER NHẬP BÃI -->
             <div id="page-cont-nhap" class="page">
                 <div class="card shadow-sm p-3">
@@ -328,123 +293,7 @@
         let dataCap = [];
         let dataUsers = [];
         let chartInstance = null;
-        //============
-        // 1. Khai báo thêm biến global ở đầu thẻ script để lưu trữ danh sách lệnh
-let dataLenh = []; 
 
-// 2. Cập nhật hàm switchPage để kích hoạt việc tải trước danh sách lệnh khi click menu
-function switchPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); [cite: 95]
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active')); [cite: 96]
-    document.getElementById(pageId).classList.add('active'); [cite: 96]
-    event.currentTarget.classList.add('active'); [cite: 96]
-    document.getElementById('page-title').innerText = event.currentTarget.innerText; [cite: 96]
-    
-    if(pageId === 'page-cont-nhap') loadData('ContNhap'); [cite: 96]
-    if(pageId === 'page-cont-cap') loadData('ContCap'); [cite: 96]
-    if(pageId === 'page-users') loadUsers(); [cite: 96]
-    // Bổ sung điều kiện tải cho trang quản lý lệnh mới
-    if(pageId === 'page-ql-lenh') loadDataBookingPool(); 
-}
-
-// 3. Hàm fetch toàn bộ danh sách lệnh gốc từ Google Sheet về bộ nhớ đệm ẩn
-async function loadDataBookingPool() {
-    showLoading(true); [cite: 101]
-    try {
-        const res = await fetch(API_URL + "?type=DanhSachLenh");
-        dataLenh = await res.json();
-        // Reset lại bảng về trạng thái ban đầu, bắt người dùng chủ động gõ tìm kiếm
-        document.getElementById('tbody-lenh').innerHTML = `<tr><td colspan="7" class="text-center text-muted">Vui lòng nhập số Booking để thực hiện tìm kiếm lệnh.</td></tr>`;
-    } catch (e) {
-        console.error("Lỗi tải danh sách lệnh: ", e);
-        alert("Không thể kết nối cơ sở dữ liệu lệnh booking!");
-    }
-    showLoading(false); [cite: 106]
-}
-
-// 4. Logic tìm kiếm lệnh bằng Số Booking (Dò khớp mã trong bộ nhớ cache)
-function searchBooking() {
-    const keyword = document.getElementById('search-booking-input').value.trim().toLowerCase();
-    if (!keyword) {
-        alert("Vui lòng nhập số Booking trước khi tìm!");
-        return;
-    }
-
-    // Lọc danh sách khớp với Số Booking
-    const filtered = dataLenh.filter(item => item["Số booking"] && item["Số booking"].toString().toLowerCase() === keyword);
-    
-    let html = "";
-    if (filtered.length > 0) {
-        filtered.forEach(row => {
-            // Định dạng badge màu cho Yêu cầu: Hạ rỗng hoặc Cấp rỗng
-            let reqBadge = "";
-            if (row["Yêu cầu"] === "Hạ rỗng") reqBadge = '<span class="badge bg-primary">Hạ rỗng</span>';
-            else if (row["Yêu cầu"] === "Cấp rỗng") reqBadge = '<span class="badge bg-success">Cấp rỗng</span>';
-            else reqBadge = `<span class="badge bg-secondary">${row["Yêu cầu"] || ''}</span>`;
-
-            html += `<tr>
-                <td>${row["Stt"] || ''}</td>
-                <td class="fw-bold">${row["Hãng tàu"] || ''}</td>
-                <td class="text-primary fw-bold">${row["Số booking"] || ''}</td>
-                <td>${reqBadge}</td>
-                <td class="small">${row["Thời gian bắt đầu"] ? new Date(row["Thời gian bắt đầu"]).toLocaleString('vi-VN') : ''}</td>
-                <td class="small">${row["Thời gian kết thúc"] ? new Date(row["Thời gian kết thúc"]).toLocaleString('vi-VN') : ''}</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-warning fw-bold" onclick="acceptBookingOrder('${row["Yêu cầu"]}', '${row["Số booking"]}', ${row.rowIndex})">
-                        <i class="bi bi-check-circle-fill"></i> Chấp nhận
-                    </button>
-                </td>
-            </tr>`;
-        });
-    } else {
-        html = `<tr><td colspan="7" class="text-center text-danger fw-bold">Không tìm thấy mã số Booking này trong danh sách chờ!</td></tr>`;
-    }
-    document.getElementById('tbody-lenh').innerHTML = html;
-}
-
-// 5. Hàm Xử lý khi nhấn "Chấp nhận" -> Xóa dòng trên Sheet và phân loại lệnh
-async function acceptBookingOrder(requestType, bookingNo, rowIndex) {
-    const confirmMsg = `Bạn xác nhận duyệt lệnh [${requestType.toUpperCase()}] cho Booking số: ${bookingNo}?\n(Hệ thống sẽ tiến hành xóa lệnh này khỏi danh sách book chờ sau khi duyệt)`;
-    if(!confirm(confirmMsg)) return;
-
-    showLoading(true);
-    try {
-        // Gửi lệnh POST lên Google Script yêu cầu DELETE hàng này dựa trên rowIndex
-        const payload = {
-            sheetType: "DanhSachLenh",
-            action: "delete",
-            rowIndex: parseInt(rowIndex)
-        };
-
-        const response = await fetch(API_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: JSON.stringify(payload) 
-        });
-        
-        // Tạo hiệu ứng chờ cập nhật danh bạ đồng bộ dữ liệu
-        setTimeout(async () => {
-            alert(`Duyệt thành công! Đã xóa Booking ${bookingNo} ra khỏi danh sách chờ.`);
-            document.getElementById('search-booking-input').value = ""; // Xóa trống ô tìm kiếm
-            
-            // Tải lại pool dữ liệu lệnh mới và chuyển hướng trang nghiệp vụ tương ứng cho user làm việc tiếp
-            await loadDataBookingPool();
-            
-            if (requestType === "Hạ rỗng") {
-                switchPage('page-cont-nhap');
-                openModal('add', 'ContNhap'); // Tự động mở form lập phiếu hạ rỗng
-            } else if (requestType === "Cấp rỗng") {
-                switchPage('page-cont-cap');
-                openModal('add', 'ContCap'); // Tự động mở form lập phiếu cấp rỗng
-            }
-        }, 1500);
-
-    } catch (e) {
-        alert("Lỗi hệ thống khi thực hiện chấp nhận lệnh!");
-        showLoading(false);
-    }
-}
-        //============
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('vi-VN');
         const showLoading = (s) => document.getElementById('loader').style.display = s ? 'flex' : 'none';
 
@@ -456,7 +305,7 @@ async function acceptBookingOrder(requestType, bookingNo, rowIndex) {
             
             showLoading(true);
 
-            if(true) {
+            if(API_URL.includes("DÁN_LINK")) {
                 // Đăng nhập giả lập nếu chưa cấu hình API
                 if(user === "admin") currentUser = { name: "Quản trị viên", role: "admin" };
                 else if(user === "dieudo") currentUser = { name: "Nguyễn Văn Điều Độ", role: "dieudo" };
