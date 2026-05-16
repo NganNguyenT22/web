@@ -304,99 +304,31 @@
     s ? 'flex' : 'none';
 
     // ================= 1. ĐĂNG NHẬP =================
-    async function handleLogin(e) {
+   async function handleLogin(e) {
 
-        e.preventDefault();
+    e.preventDefault();
 
-        const user =
-        document.getElementById('username').value.trim();
+    try {
 
-        const pass =
-        document.getElementById('password').value.trim();
+        const res =
+        await fetch(API_URL + "?type=TaiKhoan");
 
-        showLoading(true);
+        console.log(res);
 
-        try {
+        const text =
+        await res.text();
 
-            const res =
-            await fetch(API_URL + "?type=TaiKhoan");
+        console.log(text);
 
-            const users =
-            await res.json();
+        alert("API OK");
 
-            const found =
-            users.find(
-                u =>
-                u.Username === user &&
-                u.Password == pass
-            );
+    } catch(err) {
 
-            if(found) {
+        console.error(err);
 
-                currentUser = {
-                    name: found.HoTen,
-                    role: found.Role
-                };
-
-            } else {
-
-                alert("Sai tài khoản hoặc mật khẩu!");
-
-                showLoading(false);
-
-                return;
-            }
-
-        } catch(err) {
-
-            console.error(err);
-
-            alert("Lỗi mất kết nối API!");
-
-            showLoading(false);
-
-            return;
-        }
-
-        document.getElementById('user-fullname').innerText =
-        currentUser.name;
-
-        document.getElementById('user-role').innerText =
-        "Vai trò: " + currentUser.role.toUpperCase();
-
-        document.querySelectorAll('.role-section')
-        .forEach(el => el.style.display = 'none');
-
-        if(currentUser.role === 'admin') {
-
-            document.querySelectorAll('.role-section')
-            .forEach(el => el.style.display = 'block');
-
-        } else if(currentUser.role === 'dieudo') {
-
-            document.querySelectorAll(
-                '.view-nhap, .view-cap, .view-dieudo, .view-booking'
-            ).forEach(el => el.style.display = 'block');
-
-        } else if(currentUser.role === 'nangha') {
-
-            document.querySelectorAll('.view-nhap')
-            .forEach(el => el.style.display = 'block');
-
-        } else if(currentUser.role === 'kythuat') {
-
-            document.querySelectorAll('.view-nhap')
-            .forEach(el => el.style.display = 'block');
-        }
-
-        document.getElementById('login-screen').style.display =
-        'none';
-
-        document.getElementById('app-screen').style.display =
-        'block';
-
-        await initDashboard();
+        alert(err);
     }
+}
 
     // ================= 2. ĐIỀU HƯỚNG =================
     function switchPage(pageId) {
